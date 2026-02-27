@@ -4,6 +4,27 @@
 const lightCodeTheme = require('prism-react-renderer/themes/github');
 const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
+/** Make HTML in markdown files compatible with MDX (JSX) parsing. */
+function mdxFixHtml(filename, content) {
+  if (!filename.endsWith('.md')) return undefined;
+  let fixed = typeof content === 'string' ? content : Buffer.from(content).toString('utf-8');
+  // Self-close void HTML elements for JSX compatibility
+  fixed = fixed.replace(/<(img|br|hr|input)(\s[^>]*?)?(?<!\/)>/gi, '<$1$2 />');
+  // Remove inline style attributes (JSX requires style objects, not strings)
+  fixed = fixed.replace(/\s+style="[^"]*"/gi, '');
+  // Ensure blank line before closing </details> so MDX separates HTML from markdown
+  fixed = fixed.replace(/([^\n])\n<\/details>/g, '$1\n\n</details>');
+  // Fix repo-relative links that don't match the docs site structure
+  // Markdown-style links
+  fixed = fixed.replace(/\(docs\/quickstart\.md(#[^)]*)?(\))/g, '(./quickstart$1$2');
+  fixed = fixed.replace(/\(\.\.\/demo\/README\.md\)/g, '(./demo/README)');
+  fixed = fixed.replace(/\(LICENSE\)/g, '(https://github.com/eclipse-sdv-blueprints/ros-racer/blob/main/LICENSE)');
+  // HTML href attributes
+  fixed = fixed.replace(/href="docs\/quickstart\.md(#[^"]*)?"/g, 'href="./quickstart$1"');
+  fixed = fixed.replace(/href="\.\.\/demo\/README\.md"/g, 'href="./demo/README"');
+  return { filename, content: fixed };
+}
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Eclipse SDV Blueprints',
@@ -48,7 +69,7 @@ const config = {
         name: "companion-application",
         sourceBaseUrl: "https://raw.githubusercontent.com/eclipse-sdv-blueprints/companion-application/main",
         outDir: "docs/companion-application",
-        documents: ["Readme.md", "architecture-seat-adjuster.md", 
+        documents: ["Readme.md", "architecture-seat-adjuster.md",
         "develop-seat-adjuster.md",
         "deploy-seat-adjuster.md",
         "deploy-seat-adjuster.md",
@@ -68,7 +89,7 @@ const config = {
   ], [
     "docusaurus-plugin-remote-content",
       {
-          name: "fleet-management", 
+          name: "fleet-management",
           sourceBaseUrl: "https://raw.githubusercontent.com/eclipse-sdv-blueprints/fleet-management/main/docs", // the base url for the markdown (gets prepended to all of the documents when fetching)
           outDir: "docs/fleet-management", // the base directory to output to.
           documents: ["introduction.md"], // the file names to download
@@ -125,6 +146,54 @@ const config = {
         sourceBaseUrl: "https://raw.githubusercontent.com/eclipse-sdv-blueprints/service-to-signal/main/img",
         outDir: "docs/service-to-signal/img",
         documents: ["overview.drawio.png"],
+        requestConfig: { responseType: "arraybuffer" }
+      },
+  ], [
+    "docusaurus-plugin-remote-content",
+      {
+        name: "ros-racer",
+        sourceBaseUrl: "https://raw.githubusercontent.com/eclipse-sdv-blueprints/ros-racer/main",
+        outDir: "docs/ros-racer",
+        documents: ["README.md"],
+        requestConfig: { responseType: "arraybuffer" },
+        modifyContent: mdxFixHtml,
+      },
+  ], [
+    "docusaurus-plugin-remote-content",
+      {
+        name: "ros-racer-docs",
+        sourceBaseUrl: "https://raw.githubusercontent.com/eclipse-sdv-blueprints/ros-racer/main/docs",
+        outDir: "docs/ros-racer",
+        documents: ["quickstart.md", "visualizations.md"],
+        requestConfig: { responseType: "arraybuffer" },
+        modifyContent: mdxFixHtml,
+      },
+  ], [
+    "docusaurus-plugin-remote-content",
+      {
+        name: "ros-racer-demo",
+        sourceBaseUrl: "https://raw.githubusercontent.com/eclipse-sdv-blueprints/ros-racer/main/demo",
+        outDir: "docs/ros-racer/demo",
+        documents: ["README.md"],
+        requestConfig: { responseType: "arraybuffer" },
+        modifyContent: mdxFixHtml,
+      },
+  ], [
+    "docusaurus-plugin-remote-content",
+      {
+        name: "ros-racer-img",
+        sourceBaseUrl: "https://raw.githubusercontent.com/eclipse-sdv-blueprints/ros-racer/main/docs/assets",
+        outDir: "docs/ros-racer/docs/assets",
+        documents: ["introduction.png"],
+        requestConfig: { responseType: "arraybuffer" }
+      },
+  ], [
+    "docusaurus-plugin-remote-content",
+      {
+        name: "ros-racer-img-docs",
+        sourceBaseUrl: "https://raw.githubusercontent.com/eclipse-sdv-blueprints/ros-racer/main/docs/assets",
+        outDir: "docs/ros-racer/assets",
+        documents: ["demo.png"],
         requestConfig: { responseType: "arraybuffer" }
       },
   ]],
@@ -185,6 +254,10 @@ const config = {
               {
                 label: 'Fleet Management',
                 to: '/docs/fleet-management/introduction',
+              },
+              {
+                label: 'ROS Racer',
+                to: '/docs/ros-racer/',
               },
             ],
           },

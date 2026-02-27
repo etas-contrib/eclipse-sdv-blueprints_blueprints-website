@@ -51,6 +51,16 @@ const sidebars = {
             'service-to-signal/components/horn-client/README',
             'service-to-signal/components/actuator-provider/README'
           ]
+        },
+        {
+          type: 'category',
+          label: 'ROS Racer',
+          link: { type: 'doc', id: 'ros-racer/README'},
+          items: [
+            'ros-racer/quickstart',
+            'ros-racer/visualizations',
+            'ros-racer/demo/README',
+          ]
         }
       ]
     }
